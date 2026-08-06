@@ -5,7 +5,8 @@ library(skimr)
 #Get API Key Here: https://comtradedeveloper.un.org/profile
 #set_primary_comtrade_key("primary key")
 
-
+#Grab up to 12 months at a time so have to split
+#Same code used in tidytuesdayR for Lesotho just changed to GBR
 united_kingdom_wool_old <- map_df(2010:2020, function(yr) {
   message(paste("Fetching global monthly rows for:", yr))
   
@@ -32,7 +33,45 @@ united_kingdom_wool_new <- map_df(2021:2025, function(yr) {
     end_date = paste0(yr, "-12")      
   )
 })
-
+#One data frame
 uk_wool<-bind_rows(united_kingdom_wool_old,united_kingdom_wool_new) %>% 
   mutate(date = ymd(ref_period_id))
+#Overview of data
 skim_without_charts((uk_wool))
+#Data frame for winter months in northern hemisphere used to make blue boxes
+winter <- tibble(
+  xmin = ymd(paste0(2009:2024, "-12-01")),
+  xmax = ymd(paste0(2010:2025, "-02-28")),
+  ymin = -Inf,
+  ymax = Inf
+)
+
+#Similar graph as Lesotho and South Africa just with all GBR exports
+uk_wool %>% 
+  #20130201 in South Africa was either miss reported or miss entered as it was an extreme outlier
+  filter(reporter_code!=710 & ref_period_id!=20130201) %>% 
+  group_by(date) %>% 
+  summarise(qty=sum(qty)) %>% 
+  ggplot(aes(x=date, y=qty/1000))+
+  geom_point(shape = 19)+
+  geom_line()+
+  geom_rect(
+    data = winter,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    inherit.aes = FALSE,
+    fill = "lightblue2",
+    alpha = 0.4
+  )+
+  scale_x_date(
+    limits = c(ymd("2010-01-01"), NA),
+    breaks = seq(
+      from = ymd("2010-01-01"),
+      to = ymd("2025-01-01"),
+      by = "6 months"
+    )
+  )+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  labs(x="Date",y="Tonnes of Wool", caption = 
+         "Wool exported from the Great Britain by month in tonnes.
+          The blue boxes indicate winter periods in the northern hemisphere.")
