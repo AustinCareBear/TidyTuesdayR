@@ -36,6 +36,10 @@ united_kingdom_wool_new <- map_df(2021:2025, function(yr) {
 #One data frame
 uk_wool<-bind_rows(united_kingdom_wool_old,united_kingdom_wool_new) %>% 
   mutate(date = ymd(ref_period_id))
+
+#Alternative method for data:
+#uk_wool<-read_csv("Basotho Wool 8-4-26/UK Wool Data.csv)
+
 #Overview of data
 skim_without_charts((uk_wool))
 #Data frame for winter months in northern hemisphere used to make blue boxes
