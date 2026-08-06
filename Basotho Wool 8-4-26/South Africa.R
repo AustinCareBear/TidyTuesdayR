@@ -10,9 +10,13 @@ basotho_wool<-tt_load(2026,week =31) %>% pluck(1)
 #Data Explortation
 skim_without_charts(basotho_wool)
 
-#Looking at only South Africa ----
+#Can be changed to other countries but works best with South Africa given data amount
+country<-710
+
+#Country of interest
+#Looking at only South Africa with country code 710 ----
 basotho_wool %>% 
-  filter(reporter_code==710) %>% 
+  filter(reporter_code==country) %>% 
   group_by(ref_year) %>% 
   ggplot(aes(x= ref_year, y=qty/1000))+
   geom_boxplot(aes(group=ref_year))+
@@ -24,7 +28,7 @@ basotho_wool %>%
        illustrating changes in typical shipment size and variability over time")
 
 basotho_wool %>% 
-  filter(reporter_code==710) %>% 
+  filter(reporter_code==country) %>% 
   group_by(ref_year) %>%
   summarize(qty=sum(qty)) %>% 
   ggplot(aes(x=ref_year,y=qty/1000))+
@@ -42,7 +46,7 @@ winter <- tibble(
 )
 
 basotho_wool %>% 
-  filter(reporter_code==710) %>% 
+  filter(reporter_code==country) %>% 
   mutate(date = ymd(ref_period_id)) %>% 
   ggplot(aes(x=date, y=qty/1000))+
   geom_point()+
@@ -69,7 +73,7 @@ basotho_wool %>%
           Blue rectangles indicate the southern hemisphere's winter months")
 
 basotho_wool %>% 
-  filter(reporter_code==710) %>% 
+  filter(reporter_code==country) %>% 
   mutate(date = ymd(ref_period_id)) %>% 
   ggplot(aes(x=date, y=primary_value))+
   geom_point()+
