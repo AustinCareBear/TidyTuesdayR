@@ -111,4 +111,20 @@ uk_wool %>%
   )+
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Date", y = "Tonnes of Wool",color = "Continent", caption = "Great Britain wool exports broekn out by continent")
+  labs(x = "Date", y = "Tonnes of Wool",color = "Continent", 
+       caption = "Great Britain wool exports broken out by continent")+
+  scale_color_viridis_d(option = "C")
+
+
+uk_wool %>% 
+  filter(!(reporter_code == 710 & ref_period_id == 20130201)) %>% 
+  group_by(ref_year, region) %>% 
+  summarise(qty = sum(qty, na.rm = TRUE), .groups = "drop") %>% 
+  ggplot(aes(x = ref_year, y = qty / 1000, color = region)) +
+  geom_line() +
+  geom_point(shape = 19) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Year", y = "Tonnes of Wool",color = "Continent", 
+       caption = "Great Britain wool exports broken out by continent")+
+  scale_color_viridis_d(option = "C")
