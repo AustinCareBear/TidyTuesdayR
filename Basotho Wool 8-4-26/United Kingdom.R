@@ -128,3 +128,39 @@ uk_wool %>%
   labs(x = "Year", y = "Tonnes of Wool",color = "Continent", 
        caption = "Great Britain wool exports broken out by continent")+
   scale_color_viridis_d(option = "C")
+
+
+#Net Weight instead of quantity ----
+#It seems like net weight might be a more forgiving metric as it does not always have a 
+#unit tied to it. Most likely kg but do not want to assume. Data source says kg
+uk_wool %>% 
+  filter(!(reporter_code == 710 & ref_period_id == 20130201)) %>% 
+  group_by(date) %>% 
+  summarise(net_wgt = sum(net_wgt, na.rm = TRUE), .groups = "drop") %>% 
+  ggplot(aes(x = date, y = net_wgt)) +
+  geom_line() +
+  geom_point(shape = 19) +
+  geom_rect(
+    data = winter,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    inherit.aes = FALSE,
+    fill = "lightblue2",
+    alpha = 0.4
+  )+
+  scale_x_date(
+    limits = c(ymd("2010-01-01"), NA),
+    breaks = seq(
+      from = ymd("2010-01-01"),
+      to = ymd("2025-01-01"),
+      by = "6 months"
+    ),
+    date_labels = "%b %Y"
+  )+
+  theme_classic() +
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Date", y = "Net Weight of Wool (Unknown Unit)", 
+       caption = "Great Britain wool exports as measure by net weight")
+
+
+
