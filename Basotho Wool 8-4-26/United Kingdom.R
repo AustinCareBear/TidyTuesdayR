@@ -115,7 +115,7 @@ uk_wool %>%
        caption = "Great Britain wool exports broken out by continent")+
   scale_color_viridis_d(option = "C")
 
-
+# Continent Breakout ----
 uk_wool %>% 
   filter(!(reporter_code == 710 & ref_period_id == 20130201)) %>% 
   group_by(ref_year, region) %>% 
@@ -161,6 +161,3 @@ uk_wool %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "Date", y = "Net Weight of Wool (Unknown Unit)", 
        caption = "Great Britain wool exports as measure by net weight")
-
-
-
