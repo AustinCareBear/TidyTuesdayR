@@ -35,7 +35,8 @@ palomar<-left_join(palomar_survey,palomar_emission_lines,by = "galaxy_name") %>%
             as.numeric(.x[3]) / 3600
         )
       }
-    )
+    ),
+    ngc = ifelse(str_detect(galaxy_name, "^NGC "), 1, 0)
   )
 
 #galaxy map of sorts ----
@@ -64,7 +65,7 @@ palomar %>%
   drop_na(activity_type) %>% 
   ggplot(aes(y=log_oiii_hb,x=log_nii_ha))+
   geom_point(
-    aes(color = activity_type),
+    aes(color = activity_type, fill=ngc),
     size = 2,
     alpha = 0.6
   )+
@@ -72,4 +73,22 @@ palomar %>%
   labs(
     color = "Activity Type"
   )
+
+palomar %>% 
+  drop_na(activity_type) %>% 
+  ggplot(aes(y = log_oiii_hb, x = log_nii_ha)) +
+  geom_point(
+    aes(
+      color = activity_type,
+      shape = factor(ngc)
+    ),
+    size = 2.5,
+    alpha = 0.7
+  ) +
+  scale_shape_manual(
+    values = c("0" = 17, "1" = 16),
+    labels = c("0" = "IC", "1" = "NGC")
+  ) +
+  theme_classic()+
+  labs(x="log(nii/ha)",y="log(oiii/hb)",shape="NGC vs IC",color = "Activity Type")
 
