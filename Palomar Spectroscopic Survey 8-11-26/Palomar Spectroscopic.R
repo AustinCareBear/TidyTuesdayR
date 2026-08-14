@@ -65,7 +65,7 @@ palomar %>%
   drop_na(activity_type) %>% 
   ggplot(aes(y=log_oiii_hb,x=log_nii_ha))+
   geom_point(
-    aes(color = activity_type, fill=ngc),
+    aes(color = activity_type),
     size = 2,
     alpha = 0.6
   )+
@@ -74,6 +74,7 @@ palomar %>%
     color = "Activity Type"
   )
 
+#Plot for NGC vs IC names
 palomar %>% 
   drop_na(activity_type) %>% 
   ggplot(aes(y = log_oiii_hb, x = log_nii_ha)) +
@@ -91,4 +92,3 @@ palomar %>%
   ) +
   theme_classic()+
   labs(x="log(nii/ha)",y="log(oiii/hb)",shape="NGC vs IC",color = "Activity Type")
-
