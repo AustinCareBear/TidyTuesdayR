@@ -39,6 +39,8 @@ palomar<-left_join(palomar_survey,palomar_emission_lines,by = "galaxy_name") %>%
     ngc = ifelse(str_detect(galaxy_name, "^NGC "), 1, 0)
   )
 
+skim(palomar)
+
 #galaxy map of sorts ----
 palomar %>%
   drop_na(activity_type) %>% 
