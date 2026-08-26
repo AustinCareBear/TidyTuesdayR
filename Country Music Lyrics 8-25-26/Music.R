@@ -3,6 +3,7 @@ library(tidyverse)
 library(tidytext)
 library(skimr)
 
+# Data Load ----
 tuesdata <- tidytuesdayR::tt_load(2026, week = 34)
 
 country_lyrics <- tuesdata$country_lyrics
@@ -11,6 +12,13 @@ top_primary_writers <- tuesdata$top_primary_writers
 top_producers <- tuesdata$top_producers
 rm(tuesdata)
 
+#Exploratory Data Analysis ----
+skim_without_charts(country_lyrics)
+skim_without_charts(top_all_writers)
+skim_without_charts(top_primary_writers)
+skim_without_charts(top_producers)
+
+#Split Strings for lyrics and titles ----
 title_frequencies<-country_lyrics %>% unnest_tokens(split_title,song) %>% 
   count(split_title,sort=TRUE) %>% 
   left_join(parts_of_speech,by = c("split_title"= "word"),multiple="first")
@@ -30,6 +38,7 @@ title_frequencies %>%
        )+
   theme_classic()
 
+#Viz for word occurences ----
 lyric_frequencies %>% filter(n>750) %>% 
   ggplot(aes(x=reorder(split_lyrics,n),y=n,fill=pos))+
   geom_col()+
@@ -57,3 +66,16 @@ lyric_frequencies %>%
   theme_classic()+
   labs(x="Part of Speech",y="Occurences",title="Part of Speech Occurences in Country Song Lyrics")+
   theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1))
+
+#Popular Words by year----
+country_lyrics %>% unnest_tokens(split_song,song) %>% 
+  group_by(entered_top_30_in,split_song) %>% 
+  summarize(count = n()) %>% 
+  filter(count>5) %>% 
+  ggplot(aes(x=entered_top_30_in,y=count,color=split_song))+
+  geom_point()+
+  geom_line()+
+  theme_classic()+
+  labs(x="Year",y="Occurences",color="Word",
+       title="Most Popular Word in Country Song Titles by Year")+
+  scale_y_continuous(breaks=seq(6,16,2), limits=(c(6,16)))
