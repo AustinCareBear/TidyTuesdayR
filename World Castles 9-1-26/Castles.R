@@ -4,7 +4,8 @@ library(skimr)
 library(leaflet)
 
 #Data Load ----
-world_castles_df<-tt_load(2026,week=35) %>% pluck(1)
+world_castles_df<-tt_load(2026,week=35) %>% pluck(1) %>% 
+  mutate(category = str_to_title(category))
 
 #Exploratory Analysis ----
 skim_without_charts(world_castles_df)
@@ -57,7 +58,10 @@ leaflet(world_castles_df) %>%
   addTiles() %>%
   addCircleMarkers(lng = ~lon, lat = ~lat, 
                    radius = 3, color = ~pal(category), 
-                   popup = ~paste(name, "<br>",country, "<br>", str_to_title(category))) %>% 
+                   popup = ~paste0(
+                     "<b>", name, "</b> <br>", category, "<br>",
+                     "<img src='", image, "' width='200'>"
+                   )) %>% 
   addLegend(
     position = "bottomright",
     pal = pal,
