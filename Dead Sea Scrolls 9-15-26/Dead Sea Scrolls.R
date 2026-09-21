@@ -46,13 +46,13 @@ plot_grouped_bar <- function(data, ...) {
     coord_flip()+
     theme(axis.text.y = element_text(angle=45))
   
-  if(max(summarised$count)-min(summarised$count)>200){
-    p+scale_y_log10()+
-      labs(y="Count (log10)")
-  }else{
-    p
-  }
+  p
 }
+#Basic Plot
+plot_grouped_bar(dead_sea_df,"biblical_book")
 
+#Show color Aspect
 plot_grouped_bar(dead_sea_df,"script_type","site")
 
+#Show Faceting Aspect
+plot_grouped_bar(dead_sea_df,"site_parent","language","period") 
