@@ -2,6 +2,7 @@
 library(tidyverse)
 library(tidytuesdayR)
 library(skimr)
+library(patchwork)
 
 #Data load and mutate ----
 #added hours to earn and reformatted the setting 
@@ -60,6 +61,22 @@ cafe %>%
   theme_classic()+
   labs(x="Hourly Wage (GBP)", y="Cappuncion Price (GBP)")+
   facet_wrap(~setting)
+
+plots <- cafe %>%
+  group_split(setting) %>%
+  map(~ ggplot(.x, aes(x = hourly_wage_gbp, y = price_gbp)) +
+        geom_hex() +
+        theme_classic() +
+        labs(
+          x = "Hourly Wage (GBP)",
+          y = "Cappuccino Price (GBP)",
+          title = unique(.x$setting),
+          fill="Count"
+        )
+  )
+
+wrap_plots(plots, ncol = length(plots))
+
 
 #Log Scale box plot because some of the values are very extreme
 #Outliers should be examined
