@@ -63,3 +63,54 @@ bottom_cities_by_year<-urban_green %>%
   group_by(year) %>% 
   slice_min(averageShareOfGreenAreaInCityUrbanAreaPct, n=1) %>% 
   ungroup()
+
+#change over time
+change <- urban_green %>% 
+  select(-year_ch) %>% 
+  pivot_wider(
+    names_from = year,
+    values_from = c(averageShareOfGreenAreaInCityUrbanAreaPct, greenAreaPerCapitaM2)
+  ) %>% 
+  mutate(
+    "1990-2000" = averageShareOfGreenAreaInCityUrbanAreaPct_2000 - averageShareOfGreenAreaInCityUrbanAreaPct_1990,
+    "2000-2010" = averageShareOfGreenAreaInCityUrbanAreaPct_2010 - averageShareOfGreenAreaInCityUrbanAreaPct_2000,
+    "2010-2020" = averageShareOfGreenAreaInCityUrbanAreaPct_2020 - averageShareOfGreenAreaInCityUrbanAreaPct_2010,
+    "2020-2025" = averageShareOfGreenAreaInCityUrbanAreaPct_2025 - averageShareOfGreenAreaInCityUrbanAreaPct_2020,
+    "Total Change" = ifelse(
+      is.na(averageShareOfGreenAreaInCityUrbanAreaPct_2025),
+      averageShareOfGreenAreaInCityUrbanAreaPct_2020 - averageShareOfGreenAreaInCityUrbanAreaPct_1990,
+      averageShareOfGreenAreaInCityUrbanAreaPct_2025 - averageShareOfGreenAreaInCityUrbanAreaPct_1990
+    )
+  )
+
+most_growth<-change %>% 
+  select(-starts_with("averageShareOfGreenAreaInCityUrbanAreaPct_"),
+         -starts_with("greenAreaPerCapitaM2_")) %>% 
+  pivot_longer(
+    cols = c("1990-2000", "2000-2010", "2010-2020", "2020-2025", "Total Change"),
+    names_to = "years",
+    values_to = "pct_point_change"
+  ) %>% 
+  group_by(years) %>% 
+  slice_max(pct_point_change, n=1) %>% 
+  ungroup()
+
+worst_growth<-change %>% 
+  select(-starts_with("averageShareOfGreenAreaInCityUrbanAreaPct_"),
+         -starts_with("greenAreaPerCapitaM2_")) %>% 
+  pivot_longer(
+    cols = c("1990-2000", "2000-2010", "2010-2020", "2020-2025", "Total Change"),
+    names_to = "years",
+    values_to = "pct_point_change"
+  ) %>% 
+  group_by(years) %>% 
+  slice_min(pct_point_change, n=1) %>% 
+  ungroup()
+
+bind_rows(worst_growth,most_growth) %>% 
+  ggplot(aes(x=years,y=pct_point_change, fill=paste0(cityName, ", ",countryOrTerritoryName)))+
+  geom_col(position="dodge")+
+  theme_minimal()+
+  labs(y="Change in Green Space (%)", x="Time Span", fill="City")+
+  scale_fill_brewer(palette="Set1")+
+  theme(axis.text.x = element_text(angle=45,hjust=1))
