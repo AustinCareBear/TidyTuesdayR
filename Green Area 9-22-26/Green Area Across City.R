@@ -160,7 +160,7 @@ check_pair_assumptions <- function(x, y) {
   cat("n pairs:", length(d), "\n")
   cat("Shapiro-Wilk p-value (normality of differences):", 
       round(shapiro.test(d)$p.value, 4), "\n")
-  cat("Mean diff:", round(mean(d), 3), " SD diff:", round(sd(d), 3), "\n")
+  cat("Mean diff:", round(mean(d), 4), " SD diff:", round(sd(d), 3), "\n")
   
   # Histogram
   p_hist <- ggplot(diff_df, aes(x = diff)) +
@@ -170,13 +170,19 @@ check_pair_assumptions <- function(x, y) {
   print(p_hist)
   
   # Boxplot
-  p_box <- ggplot(diff_df, aes(y = diff, x = "")) +
-    geom_boxplot(fill = "skyblue") +
+  p_box <- ggplot(diff_df, aes(y = diff, x="")) +
+    geom_boxplot(fill = "skyblue", outlier.shape = 23, outlier.size = 2) +
     theme_minimal() +
-    labs(x = NULL, y = "Difference")
+    labs(x = NULL, y = "Difference")+
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+    )+
+    stat_summary(fun.data="mean_se",geom="errorbar", width=0.08, color="red3")+
+    stat_summary(fun=mean, geom="point", shape=24, color="red3", fill="ivory", size=2.5)+
+    scale_x_discrete(expand = expansion(add = 1.05))
   print(p_box)
   
-  # Q-Q plot (car package - includes confidence envelope)
   qqPlot(d, ylab = "Difference")
 }
 check_pair_assumptions(result$`1990`, result$`2020`)
