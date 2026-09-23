@@ -2,6 +2,7 @@
 library(tidytuesdayR)
 library(tidyverse)
 library(skimr)
+library(car)
 
 urban_green<-tt_load(2026, week=38)[[1]] %>%
   mutate(averageShareOfGreenAreaInCityUrbanAreaPct = ifelse(
@@ -114,3 +115,75 @@ bind_rows(worst_growth,most_growth) %>%
   labs(y="Change in Green Space (%)", x="Time Span", fill="City")+
   scale_fill_brewer(palette="Set1")+
   theme(axis.text.x = element_text(angle=45,hjust=1))
+
+#Examining US ----
+us<-urban_green %>% filter(countryOrTerritoryName=="United States of America")
+
+us %>% filter(year!=2025) %>% #Not a lot of data for 2025
+  ggplot(aes(x=year_ch,y=averageShareOfGreenAreaInCityUrbanAreaPct))+
+  geom_violin(aes(fill=year_ch))+
+  geom_jitter(alpha=0.4, width=0.1)+
+  theme_minimal()+
+  labs(x="Year",y="Green Space (%)")+
+  theme(legend.position = "none")+
+  stat_summary(fun.data = mean_se,geom="errorbar", width=0.15,linewidth=0.6)+
+  stat_summary(fun=mean, geom="point",shape=23,size=3,fill="white")
+
+us %>% filter(year!=2025) %>% #Not a lot of data for 2025
+  ggplot(aes(x=year_ch,y=greenAreaPerCapitaM2))+
+  geom_violin(aes(fill=year_ch))+
+  geom_jitter(alpha=0.4, width=0.1)+
+  theme_minimal()+
+  labs(x="Year",y="Green Area per Capita (m^2)")+
+  theme(legend.position = "none")+
+  stat_summary(fun.data = mean_se,geom="errorbar", width=0.15,linewidth=0.6)+
+  stat_summary(fun=mean, geom="point",shape=23,size=3,fill="white")
+
+result <- us %>% 
+  select(
+    cityName,
+    year_ch,
+    averageShareOfGreenAreaInCityUrbanAreaPct
+  ) %>% 
+  mutate(year_ch = as.character(year_ch)) %>% 
+  filter(year_ch %in% c("1990", "2000","2010","2020")) %>% 
+  pivot_wider(
+    names_from = year_ch,
+    values_from = averageShareOfGreenAreaInCityUrbanAreaPct
+  ) %>% drop_na()
+
+
+check_pair_assumptions <- function(x, y) {
+  d <- x - y
+  diff_df <- data.frame(diff = d)
+
+  cat("n pairs:", length(d), "\n")
+  cat("Shapiro-Wilk p-value (normality of differences):", 
+      round(shapiro.test(d)$p.value, 4), "\n")
+  cat("Mean diff:", round(mean(d), 3), " SD diff:", round(sd(d), 3), "\n")
+  
+  # Histogram
+  p_hist <- ggplot(diff_df, aes(x = diff)) +
+    geom_density() +
+    theme_minimal() +
+    labs(x = "Difference", y = "Count")
+  print(p_hist)
+  
+  # Boxplot
+  p_box <- ggplot(diff_df, aes(y = diff, x = "")) +
+    geom_boxplot(fill = "skyblue") +
+    theme_minimal() +
+    labs(x = NULL, y = "Difference")
+  print(p_box)
+  
+  # Q-Q plot (car package - includes confidence envelope)
+  qqPlot(d, ylab = "Difference")
+}
+check_pair_assumptions(result$`1990`, result$`2020`)
+t.test(result$`1990`, result$`2020`, paired = TRUE)
+
+check_pair_assumptions(result$`1990`, result$`2000`)
+t.test(result$`1990`, result$`2000`, paired = TRUE)
+
+check_pair_assumptions(result$`2010`, result$`2020`)
+t.test(result$`2010`, result$`2020`, paired = TRUE)
