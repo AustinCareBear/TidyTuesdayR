@@ -50,7 +50,12 @@ hospital_df<-health_df %>% select(id,city_name,country_name,area_km2_2025,popula
   drop_na(hospitals_count_2024)
 
 #Full data for both
-both_df<-inner_join(pharma_df,hospital_df,by="id")
+both_df <- inner_join(
+  pharma_df,
+  hospital_df %>%
+    select(-any_of(setdiff(intersect(names(pharma_df), names(hospital_df)), "id"))),
+  by = "id"
+)
 
 skimr::skim_without_charts(pharma_df)
 skimr::skim_without_charts(hospital_df)
@@ -84,3 +89,68 @@ pharma_df %>%
   scale_x_continuous(labels=scales::percent_format())+
   theme_minimal()+
   labs(x="Population within 1km of Pharmacy (%)",y="Top Ten Cities")
+
+
+#Examine pharma to hospital ratio ----
+both_df<-both_df %>% 
+  mutate(pharmacy_to_hospital_ratio=pharmacies_count_2024/hospitals_count_2024)
+
+both_df %>% 
+  ggplot(aes(x=pharmacies_count_2024,y=hospitals_count_2024))+
+  geom_point()+
+  stat_smooth(method="lm")+
+  theme_minimal()+
+  labs(x="Pharmacies",y="Hospitals")
+
+ratio_model<-lm(hospitals_count_2024~pharmacies_count_2024,data=both_df)
+summary(ratio_model)
+plot(ratio_model)
+#Normality Issue 
+
+#Log fixes normality
+log_ratio_model<-lm(log10(hospitals_count_2024)~log10(pharmacies_count_2024),data=both_df)
+summary(log_ratio_model)
+plot(log_ratio_model)
+
+both_df %>% 
+  ggplot(aes(x=pharmacies_count_2024,y=hospitals_count_2024))+
+  geom_point()+
+  stat_smooth(method="lm")+
+  theme_minimal()+
+  scale_x_log10()+
+  scale_y_log10()+
+  labs(x="Pharmacies",y="Hospitals")
+
+#Look at a sub region level
+both_df %>% 
+  ggplot(aes(x=pharmacies_count_2024,y=hospitals_count_2024))+
+  geom_point()+
+  stat_smooth(method="lm")+
+  theme_minimal()+
+  scale_x_log10()+
+  scale_y_log10()+
+  labs(x="Pharmacies",y="Hospitals")+
+  facet_wrap(~un_sdg_region)
+
+
+log_ratio_filtered_model<-function(x){
+  data_filtered<-filter(both_df,un_sdg_region==x)
+  if (nrow(data_filtered) < 4) {
+    message(x, ": only ", nrow(data_filtered), " observations — skipping")
+    return(NULL)
+  }
+  model<-lm(log10(hospitals_count_2024)~log10(pharmacies_count_2024),data=data_filtered)
+  print(summary(model))
+  par(mfrow=c(2,2))
+  plot(model,main=paste(x))
+  return(model)
+}
+
+region_list<-tibble(
+  region=unique(both_df$un_sdg_region)
+)
+models <- setNames(
+  lapply(region_list$region, log_ratio_filtered_model),
+  region_list$region
+)
+# Everywhere has a relationship between hospitals and pharmacies
